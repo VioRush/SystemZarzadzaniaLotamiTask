@@ -1,4 +1,4 @@
-namespace SystemZarzadzaniaLotami
+namespace SystemZarzadzaniaLotami.Models
 {
     public class Flight
     {
