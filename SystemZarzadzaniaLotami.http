@@ -1,0 +1,6 @@
+@SystemZarzadzaniaLotami_HostAddress = http://localhost:5117
+
+GET {{SystemZarzadzaniaLotami_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
