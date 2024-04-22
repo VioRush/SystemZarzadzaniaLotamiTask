@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SystemZarzadzaniaLotami.DTO;
 using SystemZarzadzaniaLotami.Mappers;
 using SystemZarzadzaniaLotami.Models;
@@ -18,7 +14,7 @@ namespace SystemZarzadzaniaLotami.Controllers
     {
         private readonly IFlightRepository flightRepository;
 
-        public FlightController(DatabaseContext context, IFlightRepository flightRepo)
+        public FlightController(ILogger<FlightController> logger, DatabaseContext context, IFlightRepository flightRepo)
         {
             flightRepository = flightRepo;
         }
@@ -48,19 +44,20 @@ namespace SystemZarzadzaniaLotami.Controllers
             return Ok(flight.ToFlightsDTO());
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Flight>> AddFlight([FromBody] AddFlightDTO flightDTO)
         {
             if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
             var flightModel = flightDTO.ToFlightFromAddDTO();
-            Console.WriteLine("contr iddddddddddd= " + flightModel.Id);
 
             await flightRepository.AddFlightAsync(flightModel);
 
             return CreatedAtAction(nameof(GetFlight), new { id = flightModel.Id }, flightModel.ToFlightsDTO());
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         [Route("{id:int}")]
         public async Task<IActionResult> UpdateFlight([FromRoute] int id, [FromBody] UpdateFlightDTO updateDTO)
@@ -76,6 +73,8 @@ namespace SystemZarzadzaniaLotami.Controllers
             return Ok(flightModel.ToFlightsDTO());
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete]
         [Route("{id:int}")]
         public async Task<IActionResult> DeleteFlight([FromRoute] int id)
