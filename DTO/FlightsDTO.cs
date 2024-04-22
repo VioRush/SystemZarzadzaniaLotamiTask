@@ -1,6 +1,6 @@
-namespace SystemZarzadzaniaLotami
+﻿namespace SystemZarzadzaniaLotami.DTO
 {
-    public class Flight
+    public class FlightsDTO
     {
         public int Id { get; set; }
 

@@ -1,6 +1,6 @@
 @SystemZarzadzaniaLotami_HostAddress = http://localhost:5117
 
-GET {{SystemZarzadzaniaLotami_HostAddress}}/weatherforecast/
+GET {{SystemZarzadzaniaLotami_HostAddress}}/flight/
 Accept: application/json
 
 ###
