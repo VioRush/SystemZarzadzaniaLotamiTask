@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using SystemZarzadzaniaLotami.DTO;
 using SystemZarzadzaniaLotami.Mappers;
 using SystemZarzadzaniaLotami.Models;
+using SystemZarzadzaniaLotami.Repositories;
 
 namespace SystemZarzadzaniaLotami.Controllers
 {
@@ -16,17 +17,18 @@ namespace SystemZarzadzaniaLotami.Controllers
     public class FlightController : ControllerBase
     {
         private readonly DatabaseContext db;
+        private readonly IFlightRepository flightRepository;
 
-        public FlightController(DatabaseContext context)
+        public FlightController(DatabaseContext context, IFlightRepository flightRepo)
         {
+            flightRepository = flightRepo;
             db = context;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Flight>>> GetFlights()
         {
-            if(db.Flights == null){ return NotFound(); }
-            var flights = await db.Flights.ToListAsync();
+            var flights = await flightRepository.GetFlightsAsync();
             var flightsDTO = flights.Select(s=>s.ToFlightsDTO());
             return Ok(flights);
         }
