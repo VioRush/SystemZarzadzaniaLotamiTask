@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SystemZarzadzaniaLotami.DTO;
+using SystemZarzadzaniaLotami.Mappers;
 using SystemZarzadzaniaLotami.Models;
 
 namespace SystemZarzadzaniaLotami.Controllers
@@ -23,72 +25,67 @@ namespace SystemZarzadzaniaLotami.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Flight>>> GetFlights()
         {
-            return await db.Flights.ToListAsync();
+            if(db.Flights == null){ return NotFound(); }
+            var flights = await db.Flights.ToListAsync();
+            var flightsDTO = flights.Select(s=>s.ToFlightsDTO());
+            return Ok(flights);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Flight>> GetFlight(int id)
         {
+            if (db.Flights == null) { return NotFound(); }
             var flight = await db.Flights.FindAsync(id);
 
-            if (flight == null)
+            if (flight == null) 
             {
                 return NotFound();
             }
 
-            return flight;
-        }
-
-        // PUT: api/Flight/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutFlight(int id, Flight flight)
-        {
-            if (id != flight.Id)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(flight).State = EntityState.Modified;
-
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FlightExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(flight.ToFlightsDTO());
         }
 
         [HttpPost]
-        public async Task<ActionResult<Flight>> AddFlight(Flight flight)
+        public async Task<ActionResult<Flight>> AddFlight([FromBody] AddFlightDTO flightDTO)
         {
-            db.Flights.Add(flight);
+            var flightModel = flightDTO.ToFlightFromAddDTO();
+            await db.Flights.AddAsync(flightModel);
             await db.SaveChangesAsync();
 
-            return CreatedAtAction("GetFlight", new { id = flight.Id }, flight);
+            return CreatedAtAction(nameof(GetFlight), new { id = flightModel.Id }, flightModel.ToFlightsDTO());
         }
 
-        // DELETE: api/Flight/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteFlight(int id)
+        [HttpPut]
+        [Route("{id}")]
+        public async Task<IActionResult> UpdateFlight([FromRoute] int id, [FromBody] UpdateFlightDTO updateDTO)
         {
-            var flight = await db.Flights.FindAsync(id);
-            if (flight == null)
+            var flightModel = await db.Flights.FirstOrDefaultAsync(e => e.Id == id);
+            if (flightModel == null)
             {
                 return NotFound();
             }
 
-            db.Flights.Remove(flight);
+            flightModel.FlightNumber = updateDTO.FlightNumber;
+            flightModel.DepartureDate = updateDTO.DepartureDate;
+            flightModel.DepartureAirport = updateDTO.DepartureAirport;
+            flightModel.DestinationAirport = updateDTO.DestinationAirport;
+            flightModel.PlaneType = updateDTO.PlaneType;
+            await db.SaveChangesAsync();
+
+            return Ok(flightModel.ToFlightsDTO());
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> DeleteFlight([FromRoute] int id)
+        {
+            var flightModel = await db.Flights.FirstOrDefaultAsync(e => e.Id == id);
+            if (flightModel == null)
+            {
+                return NotFound();
+            }
+
+            db.Flights.Remove(flightModel);
             await db.SaveChangesAsync();
 
             return NoContent();
@@ -96,7 +93,7 @@ namespace SystemZarzadzaniaLotami.Controllers
 
         private bool FlightExists(int id)
         {
-            return db.Flights.Any(e => e.Id == id);
+            return (db.Flights?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
