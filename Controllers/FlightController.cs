@@ -36,8 +36,7 @@ namespace SystemZarzadzaniaLotami.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Flight>> GetFlight(int id)
         {
-            if (db.Flights == null) { return NotFound(); }
-            var flight = await db.Flights.FindAsync(id);
+            var flight = await flightRepository.GetFlightAsync(id);
 
             if (flight == null) 
             {
@@ -51,8 +50,7 @@ namespace SystemZarzadzaniaLotami.Controllers
         public async Task<ActionResult<Flight>> AddFlight([FromBody] AddFlightDTO flightDTO)
         {
             var flightModel = flightDTO.ToFlightFromAddDTO();
-            await db.Flights.AddAsync(flightModel);
-            await db.SaveChangesAsync();
+            await flightRepository.AddFlightAsync(flightModel);
 
             return CreatedAtAction(nameof(GetFlight), new { id = flightModel.Id }, flightModel.ToFlightsDTO());
         }
@@ -61,18 +59,11 @@ namespace SystemZarzadzaniaLotami.Controllers
         [Route("{id}")]
         public async Task<IActionResult> UpdateFlight([FromRoute] int id, [FromBody] UpdateFlightDTO updateDTO)
         {
-            var flightModel = await db.Flights.FirstOrDefaultAsync(e => e.Id == id);
+            var flightModel = await flightRepository.UpdateFlightAsync(id,updateDTO);
             if (flightModel == null)
             {
                 return NotFound();
             }
-
-            flightModel.FlightNumber = updateDTO.FlightNumber;
-            flightModel.DepartureDate = updateDTO.DepartureDate;
-            flightModel.DepartureAirport = updateDTO.DepartureAirport;
-            flightModel.DestinationAirport = updateDTO.DestinationAirport;
-            flightModel.PlaneType = updateDTO.PlaneType;
-            await db.SaveChangesAsync();
 
             return Ok(flightModel.ToFlightsDTO());
         }
@@ -81,21 +72,13 @@ namespace SystemZarzadzaniaLotami.Controllers
         [Route("{id}")]
         public async Task<IActionResult> DeleteFlight([FromRoute] int id)
         {
-            var flightModel = await db.Flights.FirstOrDefaultAsync(e => e.Id == id);
+            var flightModel = await flightRepository.DeleteFlightAsync(id);
             if (flightModel == null)
             {
                 return NotFound();
             }
 
-            db.Flights.Remove(flightModel);
-            await db.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool FlightExists(int id)
-        {
-            return (db.Flights?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
