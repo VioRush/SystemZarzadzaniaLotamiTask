@@ -19,6 +19,7 @@ namespace SystemZarzadzaniaLotami.Repositories
 
         public async Task<Flight> AddFlightAsync(Flight flightModel)
         {
+            Console.WriteLine("iddddddddddd= " + flightModel.Id);
             await db.Flights.AddAsync(flightModel);
             await db.SaveChangesAsync();
             return flightModel;
